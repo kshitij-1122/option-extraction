@@ -18,6 +18,7 @@ def get_data():
             strategy_id,
             exposure,
             end_date,
+            market_price,
             instrument_type,
             future_value,
             option_type,
@@ -85,15 +86,15 @@ from connections import connect_crate_db  # assuming this function is defined
 def expiry_date():
     # Define all instrument_key LIKE patterns
     like_patterns = [
-        "B ______ P%",     # TTF?
+        "B ______ P%",     # TTF
         "TFO ______ P%",   # EUA
-        "LO ______ P%",    # WTI crude
-        "CB5 ______ P%",   # Brent crude?
-        "ON ______ P%",    # NG or Henry Hub?
+        "LO ______ P%",    # WTI
+        "CB5 ______ P%",   # Brent
+        "ON ______ P%",    # Gas
         "EUA ______ P%",   # EUA
     ]
 
-    # Base query template
+    # Query template
     base_query = """
         SELECT DISTINCT 
             properties['UnderlyingInstrument']['instrument_key'] AS future_key,
@@ -104,22 +105,24 @@ def expiry_date():
         AND properties['ExpirationDate'] > '2025-07-21'
     """
 
-    # Collect and combine all pattern queries
+    # Combine all queries with UNION ALL
     union_queries = "\nUNION ALL\n".join([base_query.format(pattern=p) for p in like_patterns])
-    
-    # Add final ORDER BY
+
     final_query = f"""
         {union_queries}
         ORDER BY option_expiry
     """
 
-    # Connect to CrateDB and run query
+    # Execute query
     conn = connect_crate_db()
     try:
         df = pd.read_sql(final_query, conn)
     finally:
         conn.dispose()
-    
+
+    # ✅ Clean the DataFrame: remove rows with any nulls
+    df = df.dropna(subset=["future_key", "future_expiry", "option_expiry"])
+
     return df
 
 
@@ -132,9 +135,9 @@ def align_option_expiries(positions_df, expiry_df):
         "TTF Curve": "TTF",
         "IPEBRT25Z": "B",
         "ICEEUA25Z": "EUA",
-        "NYMWTI26F": "LO",
+        "NYMWTI26F": "CL",
         "ICEV25CCA25Z": "CB5",
-        "NG-HenryHub-EXCH": "ON",
+        "NG-HenryHub-EXCH": "NG",
         "EUA Monthly Curve": "EUA"
     }
 
@@ -159,7 +162,9 @@ def align_option_expiries(positions_df, expiry_df):
         on=["symbol", "ym_key"],
         how="left"
     )
-
+    # output_file = "aligned_option_expiries.csv"
+    # merged.to_csv(output_file, index=False)
+    # logger.info(f"Saved merged DataFrame to {output_file} with shape: {merged.shape}")
     return merged
 
 
@@ -174,6 +179,12 @@ def manual_entries(df):
     # Set future_value to 69.83 for 'EUA Monthly Curve'
     df.loc[df["exposure"] == "EUA Monthly Curve", "future_value"] = 69.83
 
+    # Export the DataFrame to Excel for inspection with a timestamp
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_excel = f"manual_entries_output_{timestamp}.xlsx"
+    df.to_excel(output_excel, index=False)
+    logger.info(f"Exported DataFrame with manual entries to {output_excel} (shape: {df.shape})")
     return df
 
 
