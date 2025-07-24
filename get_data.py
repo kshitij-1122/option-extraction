@@ -47,9 +47,47 @@ def get_data():
                 '5421', '5422', '5423', '5426', '5427', '5428', '5429',
                 '175',
                 '681', '682', '683',
-                '222', '224', '280', '291', '404', '4283', 'LN-NG-VG'
-            );
-    """
+                '222', '224', '280', '291', '404', '4283', 'LN-NG-VG',
+                '5646',
+                'US-PWR-AA-EP-FIXED',
+                'US-NG-Basis-AH',
+                'US-PWR-CLIENT-AM',
+                'US-PWR-FIN-AM',
+                'US-PWR-CLIENT-AO',
+                'US-PWR-FIN-AO',
+                'US-PWR-FTR-AO',
+                'US-PWR-ISONE-PHYS-AO',
+                'US-PWR-PJM-PHYS-AO',
+                'US-NG-CADG',
+                'US-PWR-ERCOT-FIN-JG',
+                'US-PWR-ERCOT-FLOW-JG',
+                'US-PWR-ERCOT-OPT-JG',
+                'US-PWR-ERCOT-PHYS-JG',
+                'US-PWR-ERCOT-SHAPE-JG',
+                'US-NG-JH',
+                'US-NG-MGT-JL',
+                'US-NG-JPTM',
+                'US-PWR-ERCOT-FIN-JS',
+                'US-PWR-ERCOT-FIN-JS-OPT',
+                'US-PWR-ERCOT-PHYS-JS',
+                'US-NG-KT',
+                '478',
+                '5098',
+                'US-PWR-ERCOT-Fin-DI',
+                'US-PWR-FIN-LH',
+                'US-PWR-FIN-PK',
+                'US-PWR-LH-PK1-FUT',
+                'US-PWR-LH-PK3-OPT',
+                'US-NG-MJC',
+                'US-NG-MJC-SPEC',
+                'US-NG-JPMAR',
+                'US-NG-MAR',
+                'US-PWR-WEST-FIN-PKIM',
+                'US-NG-AtmosVirtual-RM',
+                'US-NG-RM',
+                'US-PWR-WEST-FIN-RR'
+                    );
+            """
     
     logger.info("Executing query to retrieve options data")
     logger.debug(f"Query: {query}")
@@ -91,7 +129,12 @@ def expiry_date():
         "LO ______ P%",    # WTI
         "CB5 ______ P%",   # Brent
         "ON ______ P%",    # Gas
-        "EUA ______ P%",   # EUA
+        "EUA ______ P%",
+        "OG ______ P%",
+        "ERN ______ P%",
+        "PMI ______ P%",
+        "SPM ______ P%",
+        "MDC ______ P%"
     ]
 
     # Query template
@@ -134,11 +177,23 @@ def align_option_expiries(positions_df, expiry_df):
     exposure_map = {
         "TTF Curve": "TTF",
         "IPEBRT25Z": "B",
+        "IPEBRT25U": "B", # Couldnt find this exposure in override, assuming it is similar to IPEBRT25Z
         "ICEEUA25Z": "EUA",
         "NYMWTI26F": "CL",
         "ICEV25CCA25Z": "CB5",
         "NG-HenryHub-EXCH": "NG",
-        "EUA Monthly Curve": "EUA"
+        "EUA Monthly Curve": "EUA",
+        "CMXGOLD25Q": "GC",
+        "NYMWTI26M": "CL",  # Couldnt find this exposure in override, assuming it is similar to NYMWTI26F
+        "ICEV25CCA25U": "CB5", # Couldnt find this exposure in override, assuming it is similar to ICEV25CCA25Z
+        "ERCOT-HB_NORTH-RT-ERN": "ERN",
+        "PJM-WESTERNHUB-RT-PMI": "PMI",
+        "PJM-WESTERNHUB-RT-P1X": "PMI",
+        "ERCOT-North-345KV_Hub-RT-ENO": "ERN",
+        "CAISO-SP15-DA-SPM": "SPM",
+        "WECC-MIDC-PK-DA-MPD": "MDC",
+        "ERCOT-North-345KV_Hub-DA-NDB": "ERN",
+        "ERCOT-HB_NORTH-RT-EX1": "ERN"
     }
 
     # Step 2: Preprocess expiry_df
@@ -170,38 +225,42 @@ def align_option_expiries(positions_df, expiry_df):
 
 
 
-def manual_entries(df):
-    df = df.copy()
-
-    # Set future_value to 28.07 for 'ICEV25CCA25Z'
-    df.loc[df["exposure"] == "ICEV25CCA25Z", "future_value"] = 28.07
-
-    # Set future_value to 69.83 for 'EUA Monthly Curve'
-    df.loc[df["exposure"] == "EUA Monthly Curve", "future_value"] = 69.83
-
-    # Export the DataFrame to Excel for inspection with a timestamp
-    from datetime import datetime
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_excel = f"manual_entries_output_{timestamp}.xlsx"
-    df.to_excel(output_excel, index=False)
-    logger.info(f"Exported DataFrame with manual entries to {output_excel} (shape: {df.shape})")
-    return df
+# def manual_entries(df):
 
 
 
 
+    # df = df.copy()
+
+    # # Set future_value to 28.07 for 'ICEV25CCA25Z'
+    # df.loc[df["exposure"] == "ICEV25CCA25Z", "future_value"] = 28.07
+    # df.loc[df["exposure"] == "ICEV25CCA25U", "future_value"] = 28.07
+    # # Set future_value to 69.83 for 'EUA Monthly Curve'
+    # df.loc[df["exposure"] == "EUA Monthly Curve", "future_value"] = 69.83
+
+    # # Export the DataFrame to Excel for inspection with a timestamp
+    # from datetime import datetime
+    # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # output_excel = f"manual_entries_output_{timestamp}.xlsx"
+    # df.to_excel(output_excel, index=False)
+    # logger.info(f"Exported DataFrame with manual entries to {output_excel} (shape: {df.shape})")
+    # return df
 
 
 
 
-if __name__ == "__main__":
-    logger.info("Starting main execution")
-    try:
-        data = get_data()
-        logger.info(f"Retrieved data with shape: {data.shape}")
-        print(data.head())
-        logger.info("Main execution completed successfully")
-    except Exception as e:
-        logger.error(f"Error in main execution: {str(e)}")
-        logger.error(f"Exception type: {type(e).__name__}")
-        raise
+
+
+
+
+# if __name__ == "__main__":
+#     logger.info("Starting main execution")
+#     try:
+#         data = get_data()
+#         logger.info(f"Retrieved data with shape: {data.shape}")
+#         print(data.head())
+#         logger.info("Main execution completed successfully")
+#     except Exception as e:
+#         logger.error(f"Error in main execution: {str(e)}")
+#         logger.error(f"Exception type: {type(e).__name__}")
+#         raise

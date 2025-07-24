@@ -18,7 +18,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def call_ivol_api_and_add_to_df(df, as_of_date="2025-07-21", scheme="European", model="BSM", sleep_between=0.1):
+def call_ivol_api_and_add_to_df(df, as_of_date="2025-07-21", scheme="American", model="BSM", sleep_between=0.1):
     df = df.copy()
     ivols = []
 
@@ -99,7 +99,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def transform_to_option_api_payloads(df, as_of_date="2025-07-21", scheme="American", model="BSM", output_csv="option_price_results.csv"):
+def transform_to_option_api_payloads(df, as_of_date="2025-07-21", scheme="American", model="BSM", output_csv="option_price_results_American.csv"):
     logger.info("Starting transformation of DataFrame to option API payloads")
     logger.info(f"Input DataFrame shape: {df.shape}")
     logger.info(f"Parameters - as_of_date: {as_of_date}, scheme: {scheme}, model: {model}")
